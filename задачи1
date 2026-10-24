@@ -1,0 +1,122 @@
+
+# Begin6
+a = float(input())
+b = float(input())
+c = float(input())
+v = a * b * c
+s = 2 * (a * b + b * c + a * c)
+print(v)
+print(s)
+
+# Begin7
+r = float(input())
+pi = 3.14
+l = 2 * pi * r
+s = pi * r ** 2
+print(l)
+print(s)
+
+# Begin8
+a = float(input())
+b = float(input())
+print((a + b) / 2)
+
+# Begin9
+a = float(input())
+b = float(input())
+print((a * b) ** 0.5)
+
+# Begin10
+a = float(input())
+b = float(input())
+print(a ** 2 + b ** 2)
+print(a ** 2 - b ** 2)
+print(a ** 2 * b ** 2)
+print(a ** 2 / b ** 2)
+
+# Begin11
+a = float(input())
+b = float(input())
+print(abs(a) + abs(b))
+print(abs(a) - abs(b))
+print(abs(a) * abs(b))
+print(abs(a) / abs(b))
+
+# Begin12
+a = float(input())
+b = float(input())
+c = (a ** 2 + b ** 2) ** 0.5
+p = a + b + c
+print(c)
+print(p)
+
+# Begin13
+r1 = float(input())
+r2 = float(input())
+pi = 3.14
+s1 = pi * r1 ** 2
+s2 = pi * r2 ** 2
+s3 = s1 - s2
+print(s1)
+print(s2)
+print(s3)
+
+# Begin14
+l = float(input())
+pi = 3.14
+r = l / (2 * pi)
+s = pi * r ** 2
+print(r)
+print(s)
+
+# Begin15
+s = float(input())
+pi = 3.14
+r = (s / pi) ** 0.5
+d = 2 * r
+l = 2 * pi * r
+print(d)
+print(l)
+
+# Begin16
+x1 = float(input())
+x2 = float(input())
+print(abs(x2 - x1))
+
+# Begin17
+a = float(input())
+b = float(input())
+c = float(input())
+ac = abs(c - a)
+bc = abs(c - b)
+print(ac)
+print(bc)
+print(ac + bc)
+
+# Begin18
+a = float(input())
+b = float(input())
+c = float(input())
+ac = abs(c - a)
+bc = abs(c - b)
+print(ac * bc)
+
+# Begin19
+x1 = float(input())
+y1 = float(input())
+x2 = float(input())
+y2 = float(input())
+w = abs(x2 - x1)
+h = abs(y2 - y1)
+p = 2 * (w + h)
+s = w * h
+print(p)
+print(s)
+
+# Begin20
+x1 = float(input())
+y1 = float(input())
+x2 = float(input())
+y2 = float(input())
+d = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+print(d)
