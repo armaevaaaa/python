@@ -1,0 +1,88 @@
+# While2
+a = float(input())
+b = float(input())
+count = 0
+length = a
+while length >= b:
+    length -= b
+    count += 1
+print(count)
+
+# While4
+n = int(input())
+rest = n
+while rest % 3 == 0:
+    rest //= 3
+print(rest == 1)
+
+# While5
+n = int(input())
+k = 0
+while n > 1:
+    n //= 2
+    k += 1
+print(k)
+
+# While6
+n = int(input())
+result = 1.0
+k = n
+while k > 0:
+    result *= k
+    k -= 2
+print(result)
+
+# While7
+n = int(input())
+k = 1
+while k * k <= n:
+    k += 1
+print(k)
+
+# While9
+n = int(input())
+power = 1
+k = 0
+while power <= n:
+    power *= 3
+    k += 1
+print(k)
+
+# While10
+n = int(input())
+power = 1
+k = 0
+while power * 3 < n:
+    power *= 3
+    k += 1
+print(k)
+
+# While12
+n = int(input())
+total = 0
+k = 0
+while total + (k + 1) <= n:
+    k += 1
+    total += k
+print(k)
+print(total)
+
+# While13
+a = float(input())
+total = 0.0
+k = 0
+while total <= a:
+    k += 1
+    total += 1 / k
+print(k)
+print(total)
+
+# While14
+a = float(input())
+total = 0.0
+k = 0
+while total + 1 / (k + 1) < a:
+    k += 1
+    total += 1 / k
+print(k)
+print(total)
