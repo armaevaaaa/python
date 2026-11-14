@@ -1,0 +1,172 @@
+
+LIB1.
+
+import random
+
+prices = {"зелье": 10, "масло": 15, "эликсир": 40}
+
+enemy_stats = {
+    "скелет":       {"hp": 45, "damage": 6, "loot": 25},
+    "упырь":        {"hp": 30, "damage": 4, "loot": 15},
+    "паук":         {"hp": 20, "damage": 3, "loot": 10},
+    "летучая мышь": {"hp": 12, "damage": 2, "loot": 5},
+}
+
+
+def hero_hit(strike_n, damage, crit_damage):
+    if strike_n % 3 == 0:
+        return crit_damage, True
+    return damage, False
+
+
+def fight(enemy, hero_health, bonus, damage, crit_damage):
+    stats = enemy_stats[enemy]
+    enemy_hp = float(stats["hp"])
+    rounds = []
+    round_n = 0
+
+    print(f"Ты спускаешься по ступеням. Из темноты выходит {enemy}!")
+
+    while enemy_hp > 0 and hero_health > 0:
+        round_n += 1
+        hit, crit = hero_hit(round_n, damage, crit_damage)
+        hit = hit + bonus
+        enemy_hp -= hit
+
+        line = f"Раунд {round_n}: ты наносишь {hit:.1f}"
+        if crit:
+            line += " — критический!"
+
+        if enemy_hp <= 0:
+            line += f" {enemy.capitalize()} падает замертво."
+            rounds.append([round_n, hit, 0])
+        else:
+            blow = stats["damage"]
+            hero_health -= blow
+            line += f" Здоровье врага: {enemy_hp:.1f}. {enemy.capitalize()} бьёт в ответ на {blow}."
+            rounds.append([round_n, hit, blow])
+
+        print(line)
+
+    won = enemy_hp <= 0
+    loot = stats["loot"] if won else 0
+
+    return rounds, won, hero_health, loot
+
+
+def buy(price, gold, quantity=1):
+    cost = price * quantity
+    if gold >= cost:
+        return gold - cost, True
+    return gold, False
+
+
+--- game.py (правки) ---
+
+# в начале файла, после шапки:
+import dungeon
+
+# заменить вызовы:
+rounds, won, health, loot = dungeon.fight(enemy, health, ability_bonus, damage, crit_damage)
+gold_total, ok = dungeon.buy(dungeon.prices[item], gold_total, qty)
+hit_damage, crit = dungeon.hero_hit(i, damage, crit_damage)
+for name, price in dungeon.prices.items():
+
+
+==============================================================
+LIB2. Самотест под if __name__ == "__main__":
+==============================================================
+
+--- dungeon.py, в конец файла ---
+
+if __name__ == "__main__":
+    rounds, won, hp, loot = fight("скелет", 100, 0, 20.5, 41.0)
+    print(f"self-test: {len(rounds)} rounds, won={won}, loot={loot}")
+
+
+==============================================================
+LIB3. venv + pip + requirements.txt
+==============================================================
+
+--- терминал ---
+
+python -m venv .venv
+
+source .venv/bin/activate          # Linux
+.venv\Scripts\activate             # Windows
+
+pip install colorama
+pip freeze > requirements.txt
+
+
+--- requirements.txt ---
+
+colorama==0.4.6
+
+
+--- .gitignore (добавить строку) ---
+
+.venv/
+
+
+==============================================================
+LIB4. Цвет с откатом
+==============================================================
+
+--- game.py, после import dungeon ---
+
+try:
+    from colorama import Fore, Style, init
+    init()
+    COLOR = True
+except ImportError:
+    COLOR = False
+
+
+--- game.py, строка состояния ---
+
+state = f"Здоровье: {health:<4} Запас сил: {stamina}  Врагов: {len(enemies)}  Золото: {gold_total}  Комната: ({hero_r}, {hero_c})"
+if COLOR:
+    print(Fore.GREEN + state + Style.RESET_ALL)
+else:
+    print(state)
+
+
+==============================================================
+LIB5. Три цвета Fore и две Style
+==============================================================
+
+--- game.py, над try/except (комментарий) ---
+
+# Из документации colorama:
+# Fore.RED, Fore.YELLOW, Fore.CYAN — цвета
+# Style.BRIGHT, Style.DIM — стили (не использованы)
+# Style.RESET_ALL — сброс цвета после строки
+
+
+--- game.py, победа над врагом ---
+
+win_line = f"{enemy.capitalize()} повержен! Осталось врагов: {len(enemies)}. Добыча: {loot} золота."
+if COLOR:
+    print(Fore.YELLOW + win_line + Style.RESET_ALL)
+else:
+    print(win_line)
+
+
+==============================================================
+LIB6. Docstring модуля
+==============================================================
+
+--- dungeon.py, первая строка файла (выше import random) ---
+
+"""
+Модуль правил игры «Колодец у старой мельницы».
+
+Содержит правила боя, цены магазина и карточки врагов.
+Сюжет (меню, команды, прощание) — в game.py.
+
+Выбор врага через random.choice оставлен в game.py:
+модуль отвечает за правила, а не за сюжет.
+"""
+
+import random
