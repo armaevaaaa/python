@@ -1,0 +1,166 @@
+
+# ---------- Matrix1 ----------
+# M, N. Матрица M×N, все элементы I-й строки равны 10*I (I = 1..M).
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(1, m + 1):
+    row = []
+    for j in range(n):
+        row.append(10 * i)
+    a.append(row)
+for row in a:
+    print(row)
+
+
+# ---------- Matrix2 ----------
+# M, N. Матрица M×N, все элементы J-го столбца равны 5*J (J = 1..N).
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(m):
+    row = []
+    for j in range(1, n + 1):
+        row.append(5 * j)
+    a.append(row)
+for row in a:
+    print(row)
+
+
+# ---------- Matrix3 ----------
+# M, N и M чисел. Матрица M×N, в каждом столбце — все числа набора.
+
+m = int(input())
+n = int(input())
+values = []
+for i in range(m):
+    values.append(int(input()))
+
+a = []
+for i in range(m):
+    row = []
+    for j in range(n):
+        row.append(values[i])
+    a.append(row)
+
+for row in a:
+    print(row)
+
+
+# ---------- Matrix4 ----------
+# M, N и N чисел. Матрица M×N, в каждой строке — все числа набора.
+# Ловушка: a.append(values) — алиасинг, нужен срез values[:].
+
+m = int(input())
+n = int(input())
+values = [int(x) for x in input().split()]
+
+a = []
+for i in range(m):
+    a.append(values[:])
+
+for row in a:
+    print(row)
+
+
+# ---------- Matrix5 (СЛОЖНОЕ) ----------
+# M, N, D и M чисел. Первый столбец — набор; каждый следующий
+# столбец = предыдущий + D (по строкам).
+
+m = int(input())
+n = int(input())
+d = int(input())
+values = []
+for i in range(m):
+    values.append(int(input()))
+
+a = []
+for i in range(m):
+    row = []
+    for j in range(n):
+        row.append(values[i] + d * j)
+    a.append(row)
+
+for row in a:
+    print(row)
+
+
+# ---------- Matrix6 (СЛОЖНОЕ) ----------
+# M, N, Q и N чисел. Первая строка — набор; каждая следующая
+# строка = предыдущая × Q (по столбцам).
+
+m = int(input())
+n = int(input())
+q = int(input())
+values = [int(x) for x in input().split()]
+
+a = []
+for i in range(m):
+    row = []
+    for j in range(n):
+        row.append(values[j] * (q ** i))
+    a.append(row)
+
+for row in a:
+    print(row)
+
+
+# ---------- Matrix7 ----------
+# M, N, матрица, K (1 ≤ K ≤ M). Вывести K-ю строку.
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(m):
+    row = [int(x) for x in input().split()]
+    a.append(row)
+
+k = int(input())
+print(a[k - 1])
+
+
+# ---------- Matrix8 ----------
+# M, N, матрица, K (1 ≤ K ≤ N). Вывести K-й столбец.
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(m):
+    row = [int(x) for x in input().split()]
+    a.append(row)
+
+k = int(input())
+print([row[k - 1] for row in a])
+
+
+# ---------- Matrix9 ----------
+# M, N, матрица. Вывести строки с чётными номерами (2, 4, ...),
+# без условного оператора.
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(m):
+    row = [int(x) for x in input().split()]
+    a.append(row)
+
+for row in a[1::2]:
+    print(row)
+
+
+# ---------- Matrix10 ----------
+# M, N, матрица. Вывести элементы столбцов с нечётными номерами
+# (1, 3, ...), по столбцам, без условного оператора.
+
+m = int(input())
+n = int(input())
+a = []
+for i in range(m):
+    row = [int(x) for x in input().split()]
+    a.append(row)
+
+for j in range(0, n, 2):
+    for i in range(m):
+        print(a[i][j])
