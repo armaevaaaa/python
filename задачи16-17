@@ -1,0 +1,174 @@
+
+# ---------- Class1 ----------
+# Класс Point: поля x, y в __init__. Создать точку, вывести поля.
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+x = int(input())
+y = int(input())
+p = Point(x, y)
+print(p.x)
+print(p.y)
+
+
+# ---------- Class2 ----------
+# Класс Point + метод shift(dx, dy). Применить и вывести поля.
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def shift(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+x = int(input())
+y = int(input())
+dx = int(input())
+dy = int(input())
+
+p = Point(x, y)
+p.shift(dx, dy)
+print(p.x)
+print(p.y)
+
+
+# ---------- Class3 ----------
+# Класс Counter: inc(), dec(), value(). Три команды, печать на value.
+
+class Counter:
+    def __init__(self):
+        self.total = 0
+
+    def inc(self):
+        self.total += 1
+
+    def dec(self):
+        self.total -= 1
+
+    def value(self):
+        return self.total
+
+c = Counter()
+for i in range(3):
+    cmd = input()
+    if cmd == "inc":
+        c.inc()
+    elif cmd == "dec":
+        c.dec()
+    else:
+        print(c.value())
+
+
+# ---------- Class4 ----------
+# Класс Potion: name, price, heal. Метод describe() возвращает строку.
+
+class Potion:
+    def __init__(self, name, price, heal):
+        self.name = name
+        self.price = price
+        self.heal = heal
+
+    def describe(self):
+        return f"{self.name}: {self.price} gold, heal {self.heal} health"
+
+name = input()
+price = int(input())
+heal = int(input())
+
+p = Potion(name, price, heal)
+print(p.describe())
+
+
+# ---------- Class5 ----------
+# Класс Point. N точек, вывести координаты точки с наибольшим x.
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+n = int(input())
+points = []
+for i in range(n):
+    x = int(input())
+    y = int(input())
+    points.append(Point(x, y))
+
+best = max(points, key=lambda p: p.x)
+print(best.x)
+print(best.y)
+
+
+# ---------- Class6 ----------
+# Класс Inventory: словарь в __init__, add(name, qty), total().
+
+class Inventory:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, name, qty):
+        self.items[name] = self.items.get(name, 0) + qty
+
+    def total(self):
+        return sum(self.items.values())
+
+inv = Inventory()
+for i in range(3):
+    name = input()
+    qty = int(input())
+    inv.add(name, qty)
+
+print(inv.total())
+
+
+# ---------- Class7 ----------
+# Класс Point с __str__, возвращающим "(x, y)". Вывести точку одним print.
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+x = int(input())
+y = int(input())
+p = Point(x, y)
+print(p)
+
+
+# ---------- Class8 (СЛОЖНОЕ) ----------
+# Класс Hero: name, health, damage; to_dict(), from_dict(data).
+# Сохранить в словарь, создать новый объект, вывести health.
+
+class Hero:
+    def __init__(self, name, health, damage):
+        self.name = name
+        self.health = health
+        self.damage = damage
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "health": self.health,
+            "damage": self.damage,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return Hero(data["name"], data["health"], data["damage"])
+
+name = input()
+health = int(input())
+damage = float(input())
+
+original = Hero(name, health, damage)
+data = original.to_dict()
+restored = Hero.from_dict(data)
+print(restored.health)
