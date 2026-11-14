@@ -1,172 +1,480 @@
-"""
-Модуль правил игры «Колодец у старой мельницы».
-
-Содержит:
-- классы Hero и Enemy;
-- цены магазина (prices);
-- карточки врагов (enemy_stats);
-- функцию боя (fight) и покупки (buy).
-
-Сюжет (меню, команды, карта, прощание) — в game.py.
-"""
+# ==============================================================
+# ИГРА «ПОДЗЕМЕЛЬЕ: КОЛОДЕЦ У СТАРОЙ МЕЛЬНИЦЫ»
+# Автор: Армаева София
+# Дата: сентябрь 2026
+# Версия: 1.0
+#
+# Этапы 16–17 — классы и финальная сборка:
+#  - Hero и Enemy — объекты с атрибутами и методами;
+#  - print(hero) — одна строка формуляра;
+#  - fight(enemy, hero, bonus) — три параметра;
+#  - to_dict / from_dict — сохранение объекта;
+#  - parse_command — разбор команды в функции;
+#  - VERSION в шапке, тег v1.0 после слияния.
+# ==============================================================
 
 import random
+import json
+import os
+import dungeon
 
 
-# --- Данные правил ---
+# --- Цвет с откатом ---
 
-prices = {"зелье": 10, "масло": 15, "эликсир": 40}
+try:
+    from colorama import Fore, Style, init
+    init()
+    COLOR = True
+except ImportError:
+    COLOR = False
 
-enemy_stats = {
-    "скелет":       {"hp": 45, "damage": 6, "loot": 25},
-    "упырь":        {"hp": 30, "damage": 4, "loot": 15},
-    "паук":         {"hp": 20, "damage": 3, "loot": 10},
-    "летучая мышь": {"hp": 12, "damage": 2, "loot": 5},
+
+# --- Версия ---
+
+VERSION = "1.0"
+
+
+# --- Константы ---
+
+title = "КОЛОДЕЦ У СТАРОЙ МЕЛЬНИЦЫ"
+frame = "=" * 31
+
+enemies = ["скелет", "упырь", "паук", "летучая мышь"]
+log = []
+
+MAP = [
+    ["#", "#", "#", "#", "#"],
+    ["#", ".", ".", "#", "#"],
+    ["#", ".", "#", ".", "#"],
+    ["#", ".", ".", "#", "#"],
+    ["#", "#", "S", ".", "#"],
+]
+
+DIRECTIONS = {
+    "north": (-1, 0),
+    "south": (1, 0),
+    "west":  (0, -1),
+    "east":  (0, 1),
 }
 
+hero_r, hero_c = 4, 2
+visited = {(4, 2)}
 
-# ==============================================================
-# КЛАСС ГЕРОЯ
-# ==============================================================
+LOOT = {
+    (1, 1): "старая монета",
+    (2, 3): "пыльное зелье",
+    (3, 3): "камень стража",
+}
+found_loot = set()
 
-class Hero:
-    """Герой забега: состояние и правила под одной крышей."""
+num_to_verb = {
+    "1": "look", "2": "go", "3": "rest", "4": "listen",
+    "5": "torch", "6": "train", "7": "descend",
+    "8": "leaders", "9": "shop", "10": "backpack",
+    "11": "drink", "0": "exit",
+}
 
-    def __init__(self, name, health, strength, agility, endurance):
-        self.name = name
-        self.health = health
-        self.strength = strength
-        self.agility = agility
-        self.endurance = endurance
-        # вычисляемые правила
-        self.damage = 10 + strength * 1.5
-        self.crit_damage = self.damage * 2
-        self.stamina = health // 10 + endurance
+commands = [
+    "look", "go [direction]", "rest", "listen", "torch",
+    "train", "descend", "leaders", "shop", "backpack",
+    "drink potion", "buy <item> [count]", "map", "scout",
+    "newgame", "exit",
+]
 
-    def __str__(self):
-        return (
-            f"{self.name}: health {self.health}, "
-            f"damage {self.damage:.1f}, stamina {self.stamina}"
-        )
-
-    def strike(self, n):
-        """Урон героя в удар n; возвращает (hit, crit)."""
-        if n % 3 == 0:
-            return self.crit_damage, True
-        return self.damage, False
-
-    def spend_stamina(self, cost):
-        """Тратит силы; если не хватает — списывает из здоровья.
-
-        Возвращает True, если шли «на упорстве» (здоровье списано).
-        """
-        if self.stamina >= cost:
-            self.stamina -= cost
-            return False
-        self.health -= cost - self.stamina
-        self.stamina = 0
-        return True
-
-    def heal(self, amount, cap):
-        """Лечит, но не выше потолка cap."""
-        self.health = min(self.health + amount, cap)
-
-    def to_dict(self):
-        """Словарь состояния для JSON."""
-        return {
-            "name": self.name,
-            "health": self.health,
-            "stamina": self.stamina,
-            "strength": self.strength,
-            "agility": self.agility,
-            "endurance": self.endurance,
-        }
-
-    @staticmethod
-    def from_dict(data):
-        """Создаёт героя из словаря сохранения."""
-        hero = Hero(
-            data["name"],
-            data["health"],
-            data["strength"],
-            data["agility"],
-            data["endurance"],
-        )
-        hero.stamina = data["stamina"]
-        return hero
+MENU = [
+    "Что делаешь? (номер или команда; help — справка)",
+    "1 - осмотреться (look)",
+    "2 - идти вперёд (go)",
+    "3 - отдохнуть (rest)",
+    "4 - прислушаться к эху (listen)",
+    "5 - зачерпнуть воды (torch)",
+    "6 - тренировка (train)",
+    "7 - спуститься глубже (descend)",
+    "8 - лидерборд (leaders)",
+    "9 - магазин (shop)",
+    "10 - рюкзак (backpack)",
+    "11 - выпить зелье (drink)",
+    "0 - выйти из подземелья (exit)",
+    "map — карта, scout — разведка, newgame — новый забег",
+]
 
 
 # ==============================================================
-# КЛАСС ВРАГА
+# ФУНКЦИИ СЮЖЕТА
 # ==============================================================
 
-class Enemy:
-    """Враг: рабочая копия карточки на один бой."""
+def parse_command(line):
+    """Возвращает пару (verb, words): глагол и слова команды."""
+    cmd = line.strip().lower()
+    words = cmd.split()
+    if not words:
+        return "", []
+    verb = words[0]
+    if cmd in num_to_verb:
+        verb = num_to_verb[cmd]
+    return verb, words
 
-    def __init__(self, name, stats):
-        self.name = name
-        self.hp = stats["hp"]
-        self.damage = stats["damage"]
-        self.loot = stats["loot"]
 
-    def __str__(self):
-        return f"{self.name}: hp {self.hp}, damage {self.damage}, loot {self.loot}"
+def print_leaderboard(log):
+    """Печатает топ-3 и рекорд врага. Возвращает None."""
+    if not log:
+        print("Ты ещё не сражался.")
+        return
+    top = sorted(log, key=lambda r: r[1], reverse=True)[:3]
+    print("Таблица лидеров (урон героя):")
+    for i in range(len(top)):
+        print(f"{i + 1}. Раунд {top[i][0]}: {top[i][1]:.1f}")
+    worst = max(log, key=lambda r: r[2])
+    print(f"Самый сильный удар врага: {worst[2]} (раунд {worst[0]}).")
 
 
-# ==============================================================
-# БОЙ И ПОКУПКА
-# ==============================================================
+def print_run_summary(log):
+    """Печатает итог забега. Возвращает None. Безопасна на пустом журнале."""
+    total = sum(r[1] for r in log)
+    rounds = len(log)
+    if rounds > 0:
+        print(f"Урон: {total:.1f} за {rounds} раундов, в среднем {total / rounds:.1f}.")
+    else:
+        print("В этом забеге не было боёв.")
 
-def fight(enemy, hero, bonus=0):
-    """Бой с enemy до гибели одного из двоих.
 
-    Возвращает (rounds, won, loot): таблицу раундов, победа, добыча.
-    Здоровье героя живёт в hero.health — не возвращается.
+def scout(r, c, seen):
+    """Рекурсивный обход карты. Возвращает число доступных комнат."""
+    if (r, c) in seen or MAP[r][c] == "#":
+        return 0
+    seen.add((r, c))
+    total = 1
+    for dr, dc in DIRECTIONS.values():
+        total += scout(r + dr, c + dc, seen)
+    return total
+
+
+def write_save():
+    """Собирает состояние забега и пишет его в save.json.
+
+    Кортежи и множества превращает в списки: JSON их не знает.
+    Возвращает None.
     """
-    rounds = []
-    round_n = 0
+    save = {}
+    save["hero"] = hero.to_dict()
+    save["gold"] = gold_total
+    save["actions"] = actions
+    save["enemies"] = enemies
+    save["position"] = [hero_r, hero_c]
+    save["visited"] = [list(p) for p in visited]
+    save["loot"] = sorted(found_loot)
+    with open("save.json", "w", encoding="utf-8") as f:
+        json.dump(save, f, ensure_ascii=False, indent=2)
 
-    print(f"Ты спускаешься по ступеням. Из темноты выходит {enemy.name}!")
 
-    while enemy.hp > 0 and hero.health > 0:
-        round_n += 1
-        hit, crit = hero.strike(round_n)
-        hit = hit + bonus
-        enemy.hp -= hit
+# ==============================================================
+# ЗАГРУЗКА СОХРАНЕНИЯ
+# ==============================================================
 
-        line = f"Раунд {round_n}: ты наносишь {hit:.1f}"
-        if crit:
-            line += " — критический!"
+print(frame)
+print("  " + title + "  ")
+print(f"  v{VERSION}")
+print(frame)
+print()
 
-        if enemy.hp <= 0:
-            line += f" {enemy.name.capitalize()} падает замертво."
-            rounds.append([round_n, hit, 0])
+loaded = None
+if os.path.exists("save.json"):
+    print("Найдено сохранение. Продолжить забег? (yes/no)")
+    answer = input().strip().lower()
+    if answer == "yes":
+        try:
+            with open("save.json", encoding="utf-8") as f:
+                loaded = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            loaded = None
+
+
+# ==============================================================
+# СЮЖЕТ
+# ==============================================================
+
+if loaded is None:
+    # --- Новый забег ---
+    print("Как зовут героя?")
+    hero_name = input()
+
+    print(f"Добро пожаловать, {hero_name}!")
+    print("Ты спускаешься в колодец. Ветер гудит в старых досках, внизу чернеет вода.")
+    print()
+
+    print("Настройка героя.")
+    print("Здоровье, сила, ловкость, выносливость – по одному числу в строке:")
+
+    while True:
+        try:
+            health = int(input())
+            strength = int(input())
+            agility = int(input())
+            endurance = int(input())
+
+            if health <= 0:
+                raise ValueError(f"Здоровье должно быть положительным, а введено {health}")
+            if strength < 0 or agility < 0 or endurance < 0:
+                raise ValueError("Сила, ловкость и выносливость не могут быть отрицательными")
+            if endurance < 2:
+                raise ValueError(f"Выносливость должна быть не меньше 2, а введено {endurance}")
+
+            break
+        except ValueError as e:
+            print(f"Ой: {e}. Введите все четыре числа снова:")
+
+    print()
+
+    hero = dungeon.Hero(hero_name, health, strength, agility, endurance)
+    max_health = health
+    max_stamina = hero.stamina
+    gold_total = 0
+    ability_bonus = 0
+    inventory = {}
+    actions = 0
+
+    print(hero)
+    print()
+
+else:
+    # --- Продолжение забега ---
+    hero = dungeon.Hero.from_dict(loaded["hero"])
+    hero_name = hero.name
+    max_health = 100
+    max_stamina = hero.stamina
+    gold_total = loaded["gold"]
+    actions = loaded["actions"]
+    enemies = loaded["enemies"]
+    hero_r, hero_c = loaded["position"]
+    visited = {tuple(p) for p in loaded["visited"]}
+    found_loot = set(loaded["loot"])
+    ability_bonus = 0
+    inventory = {}
+
+    print(f"Забег продолжен: здоровье {hero.health}, золото {gold_total}, врагов {len(enemies)}.")
+    print()
+
+
+# ==============================================================
+# ГЛАВНЫЙ ЦИКЛ
+# ==============================================================
+
+running = True
+outcome = "прерывание"
+
+try:
+    while running:
+        print("\n".join(MENU))
+        print()
+
+        line = input()
+        verb, words = parse_command(line)
+        while verb == "":
+            print("Пустая команда. Введи команду или номер.")
+            line = input()
+            verb, words = parse_command(line)
+
+        match verb:
+            case "exit":
+                print("Ты поднимаешься обратно к свету. Колодец остаётся позади.")
+                write_save()
+                print("Прогресс сохранён.")
+                outcome = "выход"
+                running = False
+
+            case "look":
+                print("Ты осматриваешься. Вокруг сырые доски колодца, на стенах блестит мох.")
+
+            case "go":
+                if len(words) > 1 and words[1] in DIRECTIONS:
+                    dr, dc = DIRECTIONS[words[1]]
+                    nr, nc = hero_r + dr, hero_c + dc
+                    if 0 <= nr < len(MAP) and 0 <= nc < len(MAP[nr]) and MAP[nr][nc] != "#":
+                        hero_r, hero_c = nr, nc
+                        visited.add((hero_r, hero_c))
+                        print(f"Ты шагаешь {words[1]}. Комната ({hero_r}, {hero_c}).")
+                        if (hero_r, hero_c) in LOOT:
+                            item = LOOT[(hero_r, hero_c)]
+                            if item not in found_loot:
+                                found_loot.add(item)
+                                print(f"Ты находишь {item}! Уникальный лут: {len(found_loot)}.")
+                    else:
+                        print(f"Нельзя идти {words[1]}: стена или край.")
+                else:
+                    on_faith = hero.spend_stamina(2)
+                    if not on_faith:
+                        print("Ты осторожно спускаешься по скользким ступеням. Доски скрипят под ногами.")
+                    else:
+                        print("Сил больше нет — ты идёшь на одном упорстве.")
+
+            case "rest":
+                hero.stamina = min(hero.stamina + 5, max_stamina)
+                print("Ты садишься на выступ и переводишь дыхание. Силы возвращаются.")
+
+            case "listen":
+                hero.stamina -= 1
+                print("Ты замираешь и слушаешь. Эхо уходит вниз, в чёрную воду, и возвращается тихим гулом.")
+
+            case "torch":
+                hero.heal(5, max_health)
+                print("Ты зачерпываешь студёной воды. Она обжигает горло, но возвращает бодрость.")
+
+            case "train":
+                strikes = 6
+                total_damage = 0.0
+                crit_count = 0
+                print("Ты подходишь к старому срубу мельницы.")
+                print("На нём укреплён столб с перекладиной — здесь когда-то проверяли силу.")
+                print()
+                print(f"Наносишь {strikes} ударов.")
+                for i in range(1, strikes + 1):
+                    hit_damage, crit = hero.strike(i)
+                    if crit:
+                        crit_count += 1
+                        print(f"Удар {i}: {hit_damage:.1f} — критический!")
+                    else:
+                        print(f"Удар {i}: {hit_damage:.1f}")
+                    total_damage += hit_damage
+                print()
+                print(f"Итог: {strikes} ударов, критических ударов: {crit_count}")
+                print(f"Общий урон: {total_damage:.1f}")
+                print(f"Средний урон: {total_damage / strikes:.1f}")
+                hero.stamina = max(hero.stamina - 5, 0)
+                print("Тренировка отняла много сил.")
+
+            case "descend":
+                if not enemies:
+                    print("Ты спускаешься глубже, но подземелье пусто.")
+                else:
+                    foe_name = random.choice(enemies)
+                    foe = dungeon.Enemy(foe_name, dungeon.enemy_stats[foe_name])
+                    rounds, won, loot = dungeon.fight(foe, hero, ability_bonus)
+                    for r in rounds:
+                        log.append(r)
+                    if won:
+                        gold_total += loot
+                        enemies.remove(foe_name)
+                        win_line = f"{foe_name.capitalize()} повержен! Осталось врагов: {len(enemies)}. Добыча: {loot} золота."
+                        if COLOR:
+                            print(Fore.YELLOW + win_line + Style.RESET_ALL)
+                        else:
+                            print(win_line)
+                        print(f"Бой: {len(rounds)} раундов.")
+
+            case "leaders":
+                print_leaderboard(log)
+
+            case "shop":
+                print("Магазин:")
+                for name, price in dungeon.prices.items():
+                    print(f"  {name}: {price} золота")
+                print("Чтобы купить — команда: buy <название> [количество]")
+
+            case "buy":
+                if len(words) > 1 and words[-1].isdigit():
+                    qty = int(words[-1])
+                    item = " ".join(words[1:-1])
+                else:
+                    qty = 1
+                    item = " ".join(words[1:])
+                if item == "":
+                    print("Купить что? Введи: buy <название>.")
+                    continue
+                if item not in dungeon.prices:
+                    print("Такого предмета в магазине нет.")
+                    continue
+                gold_total, ok = dungeon.buy(dungeon.prices[item], gold_total, qty)
+                if ok:
+                    inventory[item] = inventory.get(item, 0) + qty
+                    print(f"Куплено {qty} {item} за {dungeon.prices[item] * qty} золота. Осталось: {gold_total}.")
+                else:
+                    print(f"Не хватает золота: нужно {dungeon.prices[item] * qty}, есть {gold_total}.")
+
+            case "backpack":
+                if not inventory:
+                    print("Рюкзак пуст.")
+                else:
+                    print("Рюкзак:")
+                    for name, qty in inventory.items():
+                        print(f"  {name}: {qty} шт.")
+
+            case "drink":
+                item = " ".join(words[1:]) or "зелье"
+                if inventory.get(item, 0) == 0:
+                    print(f"В рюкзаке нет: {item}.")
+                else:
+                    hero.heal(10, max_health)
+                    inventory[item] -= 1
+                    if inventory[item] == 0:
+                        del inventory[item]
+                    print(f"Ты выпиваешь {item}. Здоровье: {hero.health}. Осталось: {inventory.get(item, 0)}.")
+
+            case "map":
+                print("Карта:")
+                for i in range(len(MAP)):
+                    cells = []
+                    for j in range(len(MAP[i])):
+                        cell = "@" if (i, j) == (hero_r, hero_c) else MAP[i][j]
+                        cells.append(cell)
+                    print(" ".join(cells))
+
+            case "scout":
+                seen = set()
+                print(f"Разведка: {scout(hero_r, hero_c, seen)} комнат доступно.")
+
+            case "newgame":
+                if os.path.exists("save.json"):
+                    os.remove("save.json")
+                    print("Сохранение удалено. Следующий забег начнётся с чистого листа.")
+                else:
+                    print("Удалять нечего — сохранения нет.")
+                continue
+
+            case "help":
+                print("Команды: " + ", ".join(commands) + ".")
+                print("Номера 0-11 работают как раньше.")
+
+            case _:
+                print(f"Не понимаю команду: '{line.strip()}'. Напиши help.")
+                continue
+
+        actions += 1
+
+        if hero.health <= 0:
+            print(f"{hero_name} падает без сил. Колодец забирает ещё одного искателя.")
+            if os.path.exists("save.json"):
+                os.remove("save.json")
+            outcome = "гибель"
+            running = False
+
+        print()
+        state = f"Здоровье: {hero.health:<4} Запас сил: {hero.stamina}  Врагов: {len(enemies)}  Золото: {gold_total}  Комната: ({hero_r}, {hero_c})"
+        if COLOR:
+            print(Fore.GREEN + state + Style.RESET_ALL)
         else:
-            hero.health -= enemy.damage
-            line += f" Здоровье врага: {enemy.hp:.1f}. {enemy.name.capitalize()} бьёт в ответ на {enemy.damage}."
-            rounds.append([round_n, hit, enemy.damage])
+            print(state)
 
-        print(line)
+except KeyboardInterrupt:
+    print()
+    print("Ты резко оборачиваешься — и выбираешься наружу. Сеанс прерван.")
+    write_save()
+    print("Прогресс сохранён.")
 
-    won = enemy.hp <= 0
-    loot = enemy.loot if won else 0
-    return rounds, won, loot
-
-
-def buy(price, gold, quantity=1):
-    """Покупка. Возвращает (gold_left, ok). Ничего не печатает."""
-    cost = price * quantity
-    if gold >= cost:
-        return gold - cost, True
-    return gold, False
-
-
-# ==============================================================
-# САМОТЕСТ
-# ==============================================================
-
-if __name__ == "__main__":
-    hero = Hero("Тест", 100, 7, 5, 4)
-    foe = Enemy("скелет", enemy_stats["скелет"])
-    rounds, won, loot = fight(foe, hero, bonus=0)
-    print(f"self-test: {len(rounds)} rounds, won={won}, loot={loot}, health={hero.health}")
+finally:
+    print()
+    print(frame)
+    if outcome == "гибель":
+        print(f"Ты не дошёл, {hero_name}. Колодец стал твоей могилой. Действий: {actions}.")
+    elif outcome == "выход":
+        print(f"Забег окончен, {hero_name}. Ты выбрался к свету. Действий: {actions}.")
+    else:
+        print(f"Сеанс прерван, {hero_name}. Действий: {actions}.")
+    print(f"Комнат посещено: {len(visited)}. Уникальный лут: {len(found_loot)}.")
+    if inventory:
+        print("В рюкзаке осталось:")
+        for name, qty in inventory.items():
+            print(f"  {name}: {qty} шт.")
+    else:
+        print("Рюкзак пуст.")
+    print_run_summary(log)
+    print(frame)
