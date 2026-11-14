@@ -1,0 +1,139 @@
+
+import os
+
+
+# ---------- File1 (СЛОЖНОЕ) ----------
+# Дана строка S. Если S — допустимое имя файла, создать пустой файл
+# с этим именем и вывести True, иначе False.
+
+s = input()
+try:
+    with open(s, "w", encoding="utf-8") as f:
+        pass
+    print(True)
+except OSError:
+    print(False)
+
+
+# ---------- File2 ----------
+# Дано имя файла и N (> 1). Записать N первых положительных чётных чисел.
+
+name = input()
+n = int(input())
+with open(name, "w", encoding="utf-8") as f:
+    for i in range(1, n + 1):
+        f.write(str(2 * i) + "\n")
+
+
+# ---------- File3 ----------
+# Дано имя файла и вещественные A и D.
+# Записать 10 первых членов прогрессии A, A+D, A+2·D, ...
+
+name = input()
+a = float(input())
+d = float(input())
+with open(name, "w", encoding="utf-8") as f:
+    for i in range(10):
+        f.write(str(a + i * d) + "\n")
+
+
+# ---------- File4 ----------
+# Даны имена четырёх файлов. Найти количество существующих.
+
+names = []
+for i in range(4):
+    names.append(input())
+
+count = 0
+for name in names:
+    if os.path.exists(name):
+        count += 1
+print(count)
+
+
+# ---------- File5 ----------
+# Дано имя файла целых чисел. Найти количество элементов.
+# Если файла нет — вывести -1.
+
+name = input()
+if not os.path.exists(name):
+    print(-1)
+else:
+    with open(name, encoding="utf-8") as f:
+        count = 0
+        for line in f:
+            if line.strip() != "":
+                count += 1
+        print(count)
+
+
+# ---------- File6 ----------
+# Дано K и файл целых чисел. Вывести K-й элемент (с 1).
+# Если нет — вывести -1.
+
+k = int(input())
+name = input()
+with open(name, encoding="utf-8") as f:
+    nums = [int(line) for line in f if line.strip()]
+if 1 <= k <= len(nums):
+    print(nums[k - 1])
+else:
+    print(-1)
+
+
+# ---------- File7 ----------
+# Дан файл (≥ 4 элементов). Вывести первый, второй, предпоследний, последний.
+
+name = input()
+with open(name, encoding="utf-8") as f:
+    nums = [int(line) for line in f if line.strip()]
+print(nums[0])
+print(nums[1])
+print(nums[-2])
+print(nums[-1])
+
+
+# ---------- File8 ----------
+# Даны имена двух файлов: первый существует и непуст, второй отсутствует.
+# Создать второй и записать в него первый и последний элементы первого.
+
+src = input()
+dst = input()
+with open(src, encoding="utf-8") as f:
+    nums = [int(line) for line in f if line.strip()]
+with open(dst, "w", encoding="utf-8") as f:
+    f.write(str(nums[0]) + "\n")
+    f.write(str(nums[-1]) + "\n")
+
+
+# ---------- File9 (СЛОЖНОЕ) ----------
+# Даны имена двух файлов: один существует и непуст (не обязательно первый),
+# другой отсутствует. Создать отсутствующий и записать в него
+# конечный и начальный элементы существующего.
+
+name1 = input()
+name2 = input()
+
+if os.path.exists(name1):
+    src, dst = name1, name2
+else:
+    src, dst = name2, name1
+
+with open(src, encoding="utf-8") as f:
+    nums = [int(line) for line in f if line.strip()]
+with open(dst, "w", encoding="utf-8") as f:
+    f.write(str(nums[-1]) + "\n")
+    f.write(str(nums[0]) + "\n")
+
+
+# ---------- File10 ----------
+# Дан файл целых чисел. Создать новый файл с теми же элементами
+# в обратном порядке.
+
+src = input()
+dst = input()
+with open(src, encoding="utf-8") as f:
+    nums = [int(line) for line in f if line.strip()]
+with open(dst, "w", encoding="utf-8") as f:
+    for x in nums[::-1]:
+        f.write(str(x) + "\n")
