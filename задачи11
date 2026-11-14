@@ -1,0 +1,277 @@
+# ---------- Dict1 ----------
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+print(len(d))
+for key in d:
+    print(key)
+
+
+# ---------- Dict2 ----------
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+k = input()
+if k in d:
+    print(d[k])
+else:
+    print("нет такого ключа")
+
+
+# ---------- Dict3 ----------
+# Построить словарь из N пар. Дан ключ K: вывести значение
+# через get с default 0 одной строкой.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+k = input()
+print(d.get(k, 0))
+
+
+# ---------- Dict4 ----------
+# Построить словарь из N пар. Затем ключ K и число V:
+# если K уже в словаре — увеличить его значение на V;
+# если нет — добавить пару (K, V). Вывести итоговое значение K.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+k = input()
+v = int(input())
+if k in d:
+    d[k] = d[k] + v
+else:
+    d[k] = v
+print(d[k])
+
+
+# ---------- Dict5 ----------
+# Построить словарь из N пар. Удалить ключ K через pop с default:
+# если ключа не было, словарь не меняется. Вывести размер после удаления.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+k = input()
+d.pop(k, None)
+print(len(d))
+
+
+# ---------- Dict6 ----------
+# Построить словарь из N пар. Вывести сумму всех значений,
+# обойдя словарь по значениям.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+total = 0
+for value in d.values():
+    total = total + value
+print(total)
+
+
+# ---------- Dict7 ----------
+# Построить словарь из N пар. Вывести ключ с наибольшим значением
+# (значения различны).
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+best = None
+for key in d:
+    if best is None or d[key] > d[best]:
+        best = key
+print(best)
+
+
+# ---------- Dict8 ----------
+# Построить словарь из N пар и число V.
+# Вывести True, если V встречается среди значений, иначе False.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+v = int(input())
+print(v in d.values())
+
+
+# ---------- Dict9 ----------
+# Построить словари из N и M пар. Слить второй в первый через update.
+# Вывести размер результата и значение ключа, который был в обоих словарях.
+
+n = int(input())
+d1 = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d1[key] = value
+
+m = int(input())
+d2 = {}
+for i in range(m):
+    key = input()
+    value = int(input())
+    d2[key] = value
+
+common_key = None
+for key in d2:
+    if key in d1:
+        common_key = key
+        break
+
+d1.update(d2)
+print(len(d1))
+print(d1[common_key])
+
+
+# ---------- Dict10 ----------
+# Построить словарь из N пар (название предмета, цена).
+# Вывести каждую пару строкой "название: цена" через items.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+for name, price in d.items():
+    print(f"{name}: {price}")
+
+
+# ---------- Dict11 ----------
+# Даны N слов. Построить словарь-счётчик: слово → сколько раз встретилось.
+# Вывести каждое слово и его счёт в порядке первого появления.
+
+n = int(input())
+counts = {}
+for i in range(n):
+    word = input()
+    counts[word] = counts.get(word, 0) + 1
+for word, count in counts.items():
+    print(f"{word}: {count}")
+
+
+# ---------- Dict12 (СЛОЖНОЕ) ----------
+# Построить словарь из N пар с различными значениями.
+# Построить обращённый словарь: значение → ключ.
+# Вывести его пары в порядке добавления исходного.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+
+inverted = {}
+for key, value in d.items():
+    inverted[value] = key
+
+for key, value in inverted.items():
+    print(f"{key}: {value}")
+
+
+# ---------- Dict13 (СЛОЖНОЕ) ----------
+# Построить словарь из N троек: название, цена, количество.
+# Значение — список [цена, количество].
+# Вывести суммарную стоимость склада и название самого дорогого
+# по стоимости предмета.
+
+n = int(input())
+d = {}
+for i in range(n):
+    name = input()
+    price = int(input())
+    qty = int(input())
+    d[name] = [price, qty]
+
+total_cost = 0
+best_name = None
+best_cost = -1
+for name, props in d.items():
+    price, qty = props
+    cost = price * qty
+    total_cost += cost
+    if cost > best_cost:
+        best_cost = cost
+        best_name = name
+
+print(total_cost)
+print(best_name)
+
+
+# ---------- Dict14 (СЛОЖНОЕ) ----------
+# Построить словарь из N пар и число V.
+# Удалить все пары со значением меньше V,
+# не меняя словарь во время перебора. Вывести размер после удаления.
+
+n = int(input())
+d = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d[key] = value
+v = int(input())
+
+for key in list(d):
+    if d[key] < v:
+        del d[key]
+
+print(len(d))
+
+
+# ---------- Dict15 ----------
+# Построить словари из N и M пар. Добавить в первый пары второго
+# без update: только ключи, которых нет; совпавшие ключи считать
+# проигнорированными. Вывести размер и число проигнорированных.
+
+n = int(input())
+d1 = {}
+for i in range(n):
+    key = input()
+    value = int(input())
+    d1[key] = value
+
+m = int(input())
+d2 = {}
+for i in range(m):
+    key = input()
+    value = int(input())
+    d2[key] = value
+
+ignored = 0
+for key, value in d2.items():
+    if key in d1:
+        ignored += 1
+    else:
+        d1[key] = value
+
+print(len(d1))
+print(ignored)
